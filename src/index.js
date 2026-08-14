@@ -64,15 +64,20 @@ setInterval(async () => {
 
                 const message = await channel.messages.fetch(item.message_id).catch(() => null);
                 
-                if (message) {
+                if (message && message.embeds.length > 0) {
                     const oldEmbed = message.embeds[0];
-                    
+                    const originalDesc = oldEmbed.description || '';
+                    const updatedDesc = originalDesc
+                        .replace('ОЖИДАНИЕ СЕРВЕРА', 'ОДОБРЕНО (АВТО)')
+                        .replace('В ОЧЕРЕДИ (СЕРВЕР ОФФЛАЙН)', 'ОДОБРЕНО (АВТО)');
+                    const consoleOutput = (result.data && String(result.data).trim()) ? String(result.data).trim() : 'OK';
+
                     const newEmbed = EmbedBuilder.from(oldEmbed)
                         .setColor('#57F287')
-                        .setDescription(oldEmbed.description.replace('ОЖИДАНИЕ СЕРВЕРА', 'ОДОБРЕНО (АВТО)'))
+                        .setDescription(updatedDesc || 'СТАТУС: ОДОБРЕНО (АВТО)')
                         .setFields(
                             { name: 'СТАТУС', value: 'Игрок добавлен автоматически (Сервер включился)' },
-                            { name: 'КОНСОЛЬ', value: `\`\`\`${result.data}\`\`\`` }
+                            { name: 'КОНСОЛЬ', value: `\`\`\`${consoleOutput.substring(0, 1000)}\`\`\`` }
                         );
                     
                     await message.edit({ embeds: [newEmbed] });
