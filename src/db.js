@@ -20,9 +20,18 @@ db.exec(`
     message_id TEXT
   );
 `);
-
 module.exports = {
-    getConf: (id) => db.prepare('SELECT * FROM settings WHERE guild_id = ?').get(id) || {},
+    getConf: (id) => {
+        if (id) {
+            const res = db.prepare('SELECT * FROM settings WHERE guild_id = ?').get(id);
+            if (res) return res;
+        }
+        if (process.env.GUILD_ID) {
+            const res = db.prepare('SELECT * FROM settings WHERE guild_id = ?').get(process.env.GUILD_ID);
+            if (res) return res;
+        }
+        return db.prepare('SELECT * FROM settings LIMIT 1').get() || {};
+    },
     setConf: (id, key, val) => {
         db.prepare('INSERT OR IGNORE INTO settings (guild_id) VALUES (?)').run(id);
         db.prepare(`UPDATE settings SET ${key} = ? WHERE guild_id = ?`).run(val, id);

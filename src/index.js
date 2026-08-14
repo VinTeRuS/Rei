@@ -56,7 +56,8 @@ setInterval(async () => {
             db.removeFromQueue(item.id);
 
             try {
-                const guild = await client.guilds.fetch(item.guild_id).catch(() => null);
+                const targetGuildId = item.guild_id || process.env.GUILD_ID;
+                const guild = targetGuildId ? await client.guilds.fetch(targetGuildId).catch(() => null) : null;
                 if (!guild) continue;
 
                 const channel = await guild.channels.fetch(item.channel_id).catch(() => null);
@@ -91,6 +92,8 @@ setInterval(async () => {
             } catch (err) {
                 console.error(`[AutoCheck] Ошибка обновления сообщения для ${item.nickname}:`, err.message);
             }
+        } else {
+            console.warn(`[AutoCheck] Не удалось добавить ${item.nickname}: ${result.data}`);
         }
     }
 

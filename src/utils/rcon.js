@@ -4,15 +4,20 @@ const db = require('../db');
 const runCommand = async (guildId, command) => {
     const conf = db.getConf(guildId);
 
-    if (!conf.rcon_host || !conf.rcon_pass) {
+    if (!conf || !conf.rcon_host || !conf.rcon_pass) {
         return { success: false, data: 'RCON не настроен. Используйте /settings' };
     }
 
+    let host = String(conf.rcon_host).trim();
+    if (host.toLowerCase() === 'localhost') host = '127.0.0.1';
+
+    const port = parseInt(conf.rcon_port, 10) || 25575;
+
     const rcon = new Rcon({
-        host: conf.rcon_host,
-        port: conf.rcon_port || 25575,
-        password: conf.rcon_pass,
-        timeout: 3000
+        host: host,
+        port: port,
+        password: String(conf.rcon_pass).trim(),
+        timeout: 5000
     });
 
     try {
@@ -20,10 +25,13 @@ const runCommand = async (guildId, command) => {
         const response = await rcon.send(command);
         await rcon.end();
         
-        return { success: true, data: response };
+        return { success: true, data: response || 'Команда выполнена' };
         
     } catch (error) {
-        return { success: false, data: `Ошибка подключения: ${error.message}` };
+        try {
+            await rcon.end().catch(() => {});
+        } catch (_) {}
+        return { success: false, data: `Ошибка RCON: ${error.message}` };
     }
 };
 
