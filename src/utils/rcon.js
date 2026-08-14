@@ -9,9 +9,18 @@ const runCommand = async (guildId, command) => {
     }
 
     let host = String(conf.rcon_host).trim();
-    if (host.toLowerCase() === 'localhost') host = '127.0.0.1';
+    let port = parseInt(conf.rcon_port, 10) || 25575;
 
-    const port = parseInt(conf.rcon_port, 10) || 25575;
+    // Handle "ip:port" entered in host field
+    if (host.includes(':') && !host.startsWith('[')) {
+        const parts = host.split(':');
+        host = parts[0].trim();
+        if (parts[1] && !isNaN(parseInt(parts[1], 10))) {
+            port = parseInt(parts[1], 10);
+        }
+    }
+
+    if (host.toLowerCase() === 'localhost') host = '127.0.0.1';
 
     const rcon = new Rcon({
         host: host,

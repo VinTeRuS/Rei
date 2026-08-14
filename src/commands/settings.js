@@ -136,11 +136,22 @@ module.exports = {
                     
                     const s = await i.awaitModalSubmit({ time: 60000, filter: (s) => s.user.id === i.user.id }).catch(() => null);
                     if (s) {
-                        const port = parseInt(s.fields.getTextInputValue('port'));
+                        let rawHost = s.fields.getTextInputValue('host').trim();
+                        let rawPort = s.fields.getTextInputValue('port').trim();
+                        let port = parseInt(rawPort, 10);
+
+                        if (rawHost.includes(':') && !rawHost.startsWith('[')) {
+                            const parts = rawHost.split(':');
+                            rawHost = parts[0].trim();
+                            if (parts[1] && !isNaN(parseInt(parts[1], 10))) {
+                                port = parseInt(parts[1], 10);
+                            }
+                        }
+
                         if (isNaN(port)) return s.reply({content:'Порт должен быть числом!', flags: MessageFlags.Ephemeral});
-                        db.setConf(guildId, 'rcon_host', s.fields.getTextInputValue('host'));
+                        db.setConf(guildId, 'rcon_host', rawHost);
                         db.setConf(guildId, 'rcon_port', port);
-                        db.setConf(guildId, 'rcon_pass', s.fields.getTextInputValue('pass'));
+                        db.setConf(guildId, 'rcon_pass', s.fields.getTextInputValue('pass').trim());
                         await s.update(generateDashboard());
                     }
                 }
